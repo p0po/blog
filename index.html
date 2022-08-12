@@ -1,69 +1,11 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="alternative" href="/atom.xml" title="p0po's blog" type="application/atom+xml"><link rel="icon" href="/favicon.png"><title>p0po's blog</title><link rel="stylesheet" href="/css/main.css" type="text/css"><!--[if lt IE 9]><script>(function(a,b){a="abbr article aside audio bdi canvas data datalist details dialog figcaption figure footer header hgroup main mark meter nav output progress section summary template time video".split(" ");for(b=a.length-1;b>=0;b--)document.createElement(a[b])})()</script><![endif]--></head><body><header class="head"><h1 class="head-title u-fl"><a href="/">p0po's blog</a></h1><nav class="head-nav u-fr"><ul class="head-nav__list"><li class="head-nav__item"><a href="/" class="head-nav__link">Home</a></li><li class="head-nav__item"><a href="/archives" class="head-nav__link">Archives</a></li></ul></nav></header><main class="main"><article class="post"><header class="post__head"><time datetime="2017-07-01T16:58:06.000Z" class="post__time">July 2, 2017</time><h1 class="post__title"><a href="/2017/07/02/排行榜技术记录/">排行榜技术记录</a></h1></header><div class="post__main echo"><p>排行榜一般都是异步任务跑出结果，将结果放入缓存，比如redis，然后将缓存中的结果展示给用户。<br>一般来说，大家都能想到这个方案，但是很多在展示的排行榜都忽略了一个要素，那就是排行榜生成时间，<br>对于异步生成的排行榜来说，这个至关重要，因为从严谨性考虑，应该给用户交代清楚，这个结果的有效时间范围。</p>
-<h2 id="排行榜需求是统计用户投资前100名。">排行榜需求是统计用户投资前100名。</h2><h3 id="开始为了完成功能：">开始为了完成功能：</h3><p>在数据量少的时候，直接SQL统计结果出来，放到REDIS中，很简单，也很有效。</p>
-<h3 id="但随着数据量的增加，一个SQL肯定会越来越慢：">但随着数据量的增加，一个SQL肯定会越来越慢：</h3><p>于是想到分页查询，在内存中统计结果，然后将结果放入到REDIS中，效果也还不错。</p>
-<h3 id="随着数据量的增加，每次统计IO越来越大，时间越来越长：">随着数据量的增加，每次统计IO越来越大，时间越来越长：</h3><p>于是想到将查询到结果缓存到本地内存中，缓存中没有才去数据库查询，然后将其缓存到本地，即减少了和数据库的交互次数，又减少了每次统计时间，可以继续运转了。</p>
-<h3 id="随着数据量的增加，本地内存开始出现溢出告警，对于java程序来说，经常出现FULL_GC：">随着数据量的增加，本地内存开始出现溢出告警，对于java程序来说，经常出现FULL GC：</h3><p>于是将每个用户的投资总额放到redis，标记每次查询的时间，下次增量查询计算相关用户的投资总额，并改写用户在redis中的投资总额，<br>将每个用户的投资总额和排行榜中的最小值做比较，如果大于最小值，则放入排行榜，删除原来的最小值。</p>
-<h3 id="随着数据量的增加，没有出现什么大的问题，但上述方案存在隐患，后续验证后会补上。">随着数据量的增加，没有出现什么大的问题，但上述方案存在隐患，后续验证后会补上。</h3></div><footer class="post__foot u-cf"><a href="/2017/07/02/排行榜技术记录/#disqus_thread" class="post__foot-link u-fr">0 COMMENTS</a></footer></article><article class="post"><header class="post__head"><time datetime="2017-01-21T11:07:10.018Z" class="post__time">January 21, 2017</time><h1 class="post__title"><a href="/2017/01/21/hello-world/">Hello World</a></h1></header><div class="post__main echo"><p>欢迎来到 <a href="http://yongpo.net/">P0PO</a> 的博客 这是我的技术博客，长期有效.</p>
-</div><footer class="post__foot u-cf"><a href="/2017/01/21/hello-world/#disqus_thread" class="post__foot-link u-fr">0 COMMENTS</a></footer></article><article class="post"><header class="post__head"><time datetime="2016-04-04T12:29:26.000Z" class="post__time">April 4, 2016</time><h1 class="post__title"><a href="/2016/04/04/about-joda-time/">JODA-TIME 文档</a></h1></header><div class="post__main echo"><p>为什么选择joda-time？因为jdk的时间类比较简陋，先看几个joda-time官网的示例代码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isAfterPayDay</span><span class="params">(DateTime datetime)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (datetime.getMonthOfYear() == <span class="number">2</span>) &#123;   <span class="comment">// February is month 2!!</span></span><br><span class="line">    <span class="keyword">return</span> datetime.getDayOfMonth() &gt; <span class="number">26</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> datetime.getDayOfMonth() &gt; <span class="number">28</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> Days <span class="title">daysToNewYear</span><span class="params">(LocalDate fromDate)</span> </span>&#123;</span><br><span class="line">  LocalDate newYear = fromDate.plusYears(<span class="number">1</span>).withDayOfYear(<span class="number">1</span>);</span><br><span class="line">  <span class="keyword">return</span> Days.daysBetween(fromDate, newYear);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isRentalOverdue</span><span class="params">(DateTime datetimeRented)</span> </span>&#123;</span><br><span class="line">  Period rentalPeriod = <span class="keyword">new</span> Period().withDays(<span class="number">2</span>).withHours(<span class="number">12</span>);</span><br><span class="line">  <span class="keyword">return</span> datetimeRented.plus(rentalPeriod).isBeforeNow();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> String <span class="title">getBirthMonthText</span><span class="params">(LocalDate dateOfBirth)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> dateOfBirth.monthOfYear().getAsText(Locale.ENGLISH);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>接下来看一下joda-time的主要功能:</p>
-<ul>
-<li>LocalDate - date without time（没有时间的日期）</li>
-<li>LocalTime - time without date （没有日期的时间）</li>
-<li>Instant - an instantaneous point on the time-line （时间轴上的时间点）</li>
-<li>DateTime - full date and time with time-zone （没有时区的日期时间）</li>
-<li>DateTimeZone - a better time-zone （好用的时区）</li>
-<li>Duration and Period - amounts of time （时间段）</li>
-<li>Interval - the time between two instants （两个时间点之间的时间）</li>
-<li>A comprehensive and flexible formatter-parser （灵活全面的时间格式化工具）</li>
-</ul>
-<p>如何构建？<br>Each date-time class provides a variety of constructors. These include the Object constructor. This allows you to construct an instance from a variety of different objects: For example, a DateTime can be constructed from the following objects:<br>每个date-time类都提供多个构造方法。这些包含类构造方法。用这些方法能够从不同的类构造date-time类，例如：</p>
-<ul>
-<li>Date - a JDK instant</li>
-<li>Calendar - a JDK calendar</li>
-<li>String - in <a href="http://baike.baidu.com/link?url=gnzdJcOeandNP8OXZUSh2U4z9EEPLQLyoBD6JjzfQEohi8-R8joiuQOBuO5J7DqE9AHak-fCXYTGsyvXusZXK_#4" target="_blank" rel="external">ISO8601</a> format </li>
-<li>Long - in milliseconds</li>
-<li>any Joda-Time date-time class</li>
-</ul>
-<p>(ISO8601 格式：合并表示时，要在时间前面加一大写字母T，如要表示北京时间2004年5月3日下午5点30分8秒，可以写成2004-05-03T17:30:08+08:00或20040503T173008+08。)</p>
-<h1 id="日期和时间（Date_and_Time）">日期和时间（Date and Time）</h1><p>The use of an Object constructor is a little unusual, but it is used because the list of types that can be converted is extensible. The main advantage is that converting from a JDK Date or Calendar to a Joda-Time class is easy - simply pass the JDK class into the constructor. For example, this code converts a java.util.Date to a DateTime:<br>例如，将Date转化为DateTime<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">java.util.Date juDate = <span class="keyword">new</span> Date();</span><br><span class="line">DateTime dt = <span class="keyword">new</span> DateTime(juDate);</span><br></pre></td></tr></table></figure></p>
-<p>Each date-time class provides simple easy methods to access the date-time fields. For example, to access the month and year you can use:<br>每个类都提供了简单易用的方法获取时间字段。例如，可以用如下方法获取年和月：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">DateTime dt = <span class="keyword">new</span> DateTime();</span><br><span class="line"><span class="keyword">int</span> month = dt.getMonthOfYear();  <span class="comment">// where January is 1 and December is 12</span></span><br><span class="line"><span class="keyword">int</span> year = dt.getYear();</span><br></pre></td></tr></table></figure></p>
-<p>All the main date-time classes are immutable, like String, and cannot be changed after creation.<br>However, simple methods have been provided to alter field values in a newly created object. For example, to set the year, or add 2 hours you can use:<br>所有主要的时间类都是不可变的，类似于String类，一旦创建就不能改变。但是可以通过类提供的简单方法修改字段值。<br>例如，可以设置年份或者加2个月：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">DateTime dt = <span class="keyword">new</span> DateTime();</span><br><span class="line">DateTime year2000 = dt.withYear(<span class="number">2000</span>);</span><br><span class="line">DateTime twoHoursLater = dt.plusHours(<span class="number">2</span>);</span><br></pre></td></tr></table></figure></p>
-<p>In addition to the basic get methods, each date-time class provides property methods for each field.<br>These provide access to the full wealth of Joda-Time functionality. For example, to access details about a month or year:<br>获取年和月的的详情：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">DateTime dt = <span class="keyword">new</span> DateTime();</span><br><span class="line">String monthName = dt.monthOfYear().getAsText();</span><br><span class="line">String frenchShortName = dt.monthOfYear().getAsShortText(Locale.FRENCH);</span><br><span class="line"><span class="keyword">boolean</span> isLeapYear = dt.year().isLeap();</span><br><span class="line">DateTime rounded = dt.dayOfMonth().roundFloorCopy();</span><br></pre></td></tr></table></figure></p>
-</div><footer class="post__foot u-cf"><ul class="post__tag u-fl"><li class="post__tag__item"><a href="/tags/joda-time/" class="post__tag__link">joda-time</a></li></ul><a href="/2016/04/04/about-joda-time/#disqus_thread" class="post__foot-link u-fr">0 COMMENTS</a></footer></article><article class="post"><header class="post__head"><time datetime="2016-03-06T10:30:20.000Z" class="post__time">March 6, 2016</time><h1 class="post__title"><a href="/2016/03/06/p2p-order-system/">P2P订单系统设计笔记</a></h1></header><div class="post__main echo"><h2 id="定义">定义</h2><ul>
-<li>R系统：请求发起方</li>
-<li>S系统：请求接受方</li>
-</ul>
-<h2 id="R–&gt;S_发起一个同步网络交易过程">R–&gt;S 发起一个同步网络交易过程</h2><ul>
-<li>R生成唯一下单号存储（R如果不是系统，而是用户不用此步）</li>
-<li>R携带唯一的下单号发起交易请求</li>
-<li>S接收唯一下单号防重校验</li>
-<li>S防重校验通过生成订单号存储起来，返给R，发送MQ消息（下单号，订单号，状态…）</li>
-<li>S防重校验通过失败将查询到的订单号，返给R</li>
-<li>R接收到S的返回结果更新数据</li>
-<li>S如果接收不到结果，用同一个下单号重试</li>
-<li>S对于MQ的处理要根据下单号防重</li>
-</ul>
-<blockquote>
-<p><strong>对于网络请求，有明确结果是最理想的情况，可能出现的异常通常有两大类:</strong></p>
-<ul>
-<li>R网络请求没有达到S</li>
-<li>R网络请求达到S，S的返回结果没有到达R</li>
-<li>S的返回结果超出预期</li>
-</ul>
-</blockquote>
-</div><footer class="post__foot u-cf"><ul class="post__tag u-fl"><li class="post__tag__item"><a href="/tags/p2p-订单/" class="post__tag__link">p2p 订单</a></li></ul><a href="/2016/03/06/p2p-order-system/#disqus_thread" class="post__foot-link u-fr">0 COMMENTS</a></footer></article><article class="post"><header class="post__head"><time datetime="2015-08-16T14:22:44.000Z" class="post__time">August 16, 2015</time><h1 class="post__title"><a href="/2015/08/16/服务可用性指标/">服务可用性指标</a></h1></header><div class="post__main echo"><p>线上服务可用性评估标准</p>
-<p><img src="/img/ha99.png" alt="服务可用性百分比"></p>
-<p>引用一句我的签名“概率是时间之后的第五个维度”，时间我们尚且不能控制，何况概率这种事呢？</p>
-<p>服务可用性，是衡量一个系统稳定性的标准，大家通常用几个9做为系统稳定性的单位，比如通常说的4个9：</p>
-<p>如果衡量时长为一天，那么允许故障时长为8.64秒,</p>
-<p>如果衡量时长为一个月，那么允许故障时长为1.752分钟,</p>
-<p>如果衡量时长为一年，那么允许故障时长为52.26分钟.</p>
-<p>我们可以看出，时间越长对系统的考验越大，因为随着时间增长发生故障的概率会增大，因此长时间提供稳定服务就成了一个系统比较困难的指标。</p>
-<p>我们可以简单列举几个常见的故障，比如系统受到ddos攻击，需要切换域名到其他ip，这个大概需要多久呢？</p>
-<p>最快15分钟生效，整个互联网同步至少要一多个小时吧。</p>
-<p>如果没有应对措施，一年来一次你就达不到4个9了。</p>
-<p>再比如，系统上线要停止服务？停一次如果花2分钟，那这个月你就达不到4个9了。</p>
-<p>由于流量激增，某个服务挂了，停几十分钟，又要与4个9无缘了。</p>
-<p>4个9好难，5个9在国内的公司中是不敢奢求了，我们暂时把目标放低点，先踏踏实实做好3个9，从基础架构和基础设施开始。</p>
-</div><footer class="post__foot u-cf"><a href="/2015/08/16/服务可用性指标/#disqus_thread" class="post__foot-link u-fr">0 COMMENTS</a></footer></article></main><footer class="foot"><div class="foot-copy u-fl">&copy; 2017 p0po</div><menu class="page-menu u-fr"><li class="page-menu__item"><span title="Previous" class="page-menu__link icon-arrow-left page-menu__link--disabled"></span></li><li class="page-menu__item"><span title="Next" class="page-menu__link icon-arrow-right page-menu__link--disabled"></span></li></menu></footer></body></html>
+<!DOCTYPE html>
+<html>
+
+<title>目录</title>
+
+<xmp theme="united" style="display:none;">
+  [我的简历](about-me.html)
+</xmp>
+
+<script src="https://strapdownjs.com/v/0.2/strapdown.js"></script>
+</html>
